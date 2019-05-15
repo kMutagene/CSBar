@@ -1,0 +1,133 @@
+.numPadBtn {
+    height: 100%;
+}
+
+body {
+    height: 480px;
+    width: 800px;
+}
+
+html {
+    overflow:hidden;
+}
+
+.numPadContainer {
+    height: 25%;
+    border: 1px solid white;
+}
+
+.is-fullHeight {
+    height: 100%
+}
+
+#elmish-app   {
+    height: 480px;
+    width: 800px;
+}
+
+.NumPadDiv {
+    height: 480px;
+    width: 800px;
+}
+
+.numPadBtn {
+    border-radius: 0px;
+    font-size: 40px;
+}
+
+.userImg {
+    height: 190px;
+    width : 190px;
+}
+.no-overflow {
+    word-wrap: break-word;
+    overflow: hidden;
+}
+
+.is-grey {
+    background-color: gray;
+}
+
+#BeerText {
+    background-color:rgb(33, 57, 71);
+    color: rgb(255, 230, 153);
+    text-align: center;
+    font-size: 30px;
+    font-weight: bolder;
+    height: 80px;
+    line-height: 80px;
+    Border:1px solid white;
+}
+
+#CoffeeText {
+    background-color:rgb(33, 57, 71);
+    color: rgb(219, 230, 244);
+    text-align: center;
+    font-size: 30px;
+    font-weight: bolder;
+    height: 80px;
+    line-height: 80px;
+    Border:1px solid white;
+}
+
+.full-message {
+    overflow:scroll;
+    text-align: center;
+    font-size: 40px;
+    height: 444px;
+    width: 800px;
+}
+
+.beverageBtn {
+    height: 100%;
+    font-size: 50px;
+    line-height:50px;
+    border-radius: 0;
+}
+
+.is-lightBlue {
+    background-color: rgb(219, 230, 244);
+}
+h3 {
+    color: rgb(33, 57, 71) !important;
+}
+
+.is-40 {
+    height: 40px;
+}
+
+.topHeader { 
+    margin-top: 24px;
+}
+
+#pinHead {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+.pinDisplay {
+    margin: 50px 5px 0px 5px;
+    height: 236px;
+    padding: 0px 5px 0px 5px;
+    font-size: 30px;
+    border-radius: 0;
+    border: 2px solid white ;
+    text-align: center;
+    color: rgb(33, 57, 71) !important;
+    background-color:rgb(219, 230, 244); 
+    overflow: hidden;
+    word-break: break-all;
+}
+
+.box-is-danger {
+    background-color: rgb(255, 245, 247);
+    color: rgb(255, 43, 86);
+    border: 2px solid rgb(255, 43, 86);
+    margin: 20px 60px 20px 60px;
+}
+.box-is-success {
+    background-color: rgb(255, 255, 255);
+    color: rgb(35, 209, 96);
+    border: 2px solid rgb(35, 209, 96);
+    margin: 20px 60px 20px 60px;
+}
