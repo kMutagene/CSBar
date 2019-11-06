@@ -1,22 +1,26 @@
 module Client
 
 open System
+open System.IO
+open System.Text
 
 open Elmish
 open Elmish.React
 
+//open Fable.Fetch
+open Thoth.Json
+
+open Fable.React
+open Fable.React.Props
 open Fable.Core.JsInterop
-open Fable.Helpers.React.Props
-open Fable.PowerPack
-open Fable.FontAwesome
+open Shared
+//open Fulma.FontAwesome
+
+open Browser.Dom
+open Browser.Types
 
 open Fulma
-
-open Shared
-
-module R = Fable.Helpers.React
-
-module B = Fable.Import.Browser
+open Fable.FontAwesome
 
 module Server =
 
@@ -89,21 +93,21 @@ let initialModel = {
 module RequestHelpers =
 
     let createCheckPinCmd (pin:string) =
-        Cmd.ofAsync
+        Cmd.OfAsync.either
             Server.csbarApi.ConfirmPin
             pin
             (Ok >> ConfirmPinResponse)
             (Error >> ConfirmPinResponse)
 
     let createTickCmd (userName:string) (tradeName:string) (amount:int) (extid:string) =
-        Cmd.ofAsync
+        Cmd.OfAsync.either
             (Server.csbarApi.Tick userName tradeName amount)
             extid
             (Ok >> TickResponse)
             (Error >> TickResponse)
 
     let createGetBalanceCmd (name:string) =
-        Cmd.ofAsync        
+        Cmd.OfAsync.either
             Server.csbarApi.GetBalance
             name
             (Ok >> GetBalanceResponse)
@@ -238,7 +242,7 @@ let numPad (model:Model) (dispatch: Msg -> unit) =
                                                                     Button.IsFullWidth
                                                                     Button.CustomClass "is-info numPadBtn" ]
                                                     ]
-                                                    [R.str i]
+                                                    [str i]
                                             ]
                             ])
 
@@ -248,11 +252,11 @@ let numPad (model:Model) (dispatch: Msg -> unit) =
                 Container.container [Container.CustomClass "is-fullHeight numPadContainer"]
                     [
                         Image.image [Image.CustomClass "userImg";]
-                            [R.img [R.Props.Src "Images/safe_favicon.png"]]
+                            [img [Src "Images/safe_favicon.png"]]
                         Box.box' [Props [Class "box pinDisplay"] ]
                             [
-                                R.p [Id "pinHead"] [R.str "PIN INPUT:"]
-                                R.str stars
+                                p [Id "pinHead"] [str "PIN INPUT:"]
+                                str stars
                             ]
                     ]
             ]
@@ -268,12 +272,12 @@ let tickSelection (model : Model) (dispatch : Msg -> unit) =
                     [
                         Image.image [Image.IsSquare] 
                             [
-                                R.img [R.Props.Src "Images/Coffee.png"]
+                                img [Props.Src "Images/Coffee.png"]
                             ]
                     ]
                 Container.container [Container.Props [Id "CoffeeText"]]
                     [
-                        R.p [] [R.str "Tick Coffee"]
+                        p [] [str "Tick Coffee"]
                     ]                
             ]
     let beerTicker =
@@ -283,12 +287,12 @@ let tickSelection (model : Model) (dispatch : Msg -> unit) =
                     [
                         Image.image [Image.IsSquare] 
                             [
-                                R.img [R.Props.Src "Images/Beer.png"]                              
+                                img [Props.Src "Images/Beer.png"]                              
                             ]
                     ]
                 Container.container [Container.Props [Id "BeerText"]]
                     [
-                        R.p [] [R.str "Tick Beverage"]
+                        p [] [str "Tick Beverage"]
                     ]                
             ]
     Columns.columns [Columns.IsMobile;Columns.IsGapless;Columns.CustomClass "is-fullHeight"] 
@@ -303,12 +307,12 @@ let beverageSelection (amount:int) (model : Model) (dispatch : Msg -> unit) =
             Column.column [Column.Width (Screen.Tablet,Column.IsOneFifth)] []
             Column.column [Column.Width (Screen.Tablet,Column.IsThreeFifths)] 
                 [
-                    Heading.h3 [Heading.CustomClass "has-text-centered topHeader"] [R.str "1. Select the amount of the beverage you want to tick:"]
+                    Heading.h3 [Heading.CustomClass "has-text-centered topHeader"] [str "1. Select the amount of the beverage you want to tick:"]
                     Columns.columns [Columns.IsMobile;Columns.IsGapless;Columns.CustomClass"numPadContainer"]
                         [
                             Column.column [Column.Width (Screen.Tablet,Column.IsOneThird)] 
                                 [
-                                    Button.button [Button.IsFullWidth; Button.CustomClass "is-danger beverageBtn";Button.OnClick (fun _ ->  (B.document.getElementById "barcodeInput").focus()
+                                    Button.button [Button.IsFullWidth; Button.CustomClass "is-danger beverageBtn";Button.OnClick (fun _ ->  (document.getElementById "barcodeInput").focus()
                                                                                                                                             ChangeBeverageAmount (model.BeverageAmount - 1) |> dispatch)] 
                                         [
                                             Icon.icon [] [Fa.i [Fa.Solid.Minus] []]
@@ -318,19 +322,19 @@ let beverageSelection (amount:int) (model : Model) (dispatch : Msg -> unit) =
                                 [
                                     Button.button [Button.IsFullWidth; Button.CustomClass "is-info beverageBtn"] 
                                         [
-                                            R.str (string model.BeverageAmount)
+                                            str (string model.BeverageAmount)
                                         ]
                                 ] 
                             Column.column [Column.Width (Screen.Tablet,Column.IsOneThird)] 
                                 [
-                                    Button.button [Button.IsFullWidth; Button.CustomClass "is-success beverageBtn"; Button.OnClick (fun _ ->(B.document.getElementById "barcodeInput").focus()
+                                    Button.button [Button.IsFullWidth; Button.CustomClass "is-success beverageBtn"; Button.OnClick (fun _ ->(document.getElementById "barcodeInput").focus()
                                                                                                                                             ChangeBeverageAmount (model.BeverageAmount + 1) |> dispatch)] 
                                         [
                                             Icon.icon [] [Fa.i [Fa.Solid.Plus] [] ]
                                         ]
                                 ] 
                         ]
-                    Heading.h3 [Heading.CustomClass "has-text-centered"] [R.str "2. Scan a barcode to proceed:"]                    
+                    Heading.h3 [Heading.CustomClass "has-text-centered"] [str "2. Scan a barcode to proceed:"]                    
                     Columns.columns [Columns.IsMobile;Columns.IsGapless;Columns.CustomClass"numPadContainer"] 
                         [
                             Column.column [Column.Width (Screen.Tablet,Column.IsHalf)] 
@@ -341,19 +345,19 @@ let beverageSelection (amount:int) (model : Model) (dispatch : Msg -> unit) =
                                                 Input.Props [
                                                                 AutoFocus true
                                                                 OnKeyPress (fun x ->if x.key = "Enter" then  
-                                                                                        B.console.log("Enter pressed")
-                                                                                        let input = B.document.getElementById "barcodeInput"
+                                                                                        console.log("Enter pressed")
+                                                                                        let input = document.getElementById "barcodeInput"
                                                                                         let barcode = !!x.target?value
-                                                                                        B.console.log(sprintf "Barcode WORKED!!! : %s"barcode)
+                                                                                        console.log(sprintf "Barcode WORKED!!! : %s"barcode)
                                                                                         Tick (model.User.Value.Name,"",model.BeverageAmount,barcode) |> dispatch
                                                                                     else
-                                                                                        B.console.log(sprintf "differentKey pressed lol : %s" x.key))
+                                                                                        console.log(sprintf "differentKey pressed lol : %s" x.key))
                                                                 ]
                                                 ]
                                 ]
                             Column.column [Column.Width (Screen.Tablet,Column.IsHalf)] 
                                 [
-                                    Button.button [Button.IsFullWidth;Button.CustomClass"is-large is-danger is-fullHeight";Button.OnClick (fun _ -> Reset |> dispatch)] [R.str "Abort"]
+                                    Button.button [Button.IsFullWidth;Button.CustomClass"is-large is-danger is-fullHeight";Button.OnClick (fun _ -> Reset |> dispatch)] [str "Abort"]
                                 ]
                         ]
                 ]
@@ -373,13 +377,13 @@ let errorMessage (msgHead:string) (msgBody:string) (model : Model) (dispatch : M
         [
             Message.header [] 
                 [
-                    R.p [] [R.str (sprintf "Error: %s" msgHead)]
+                    p [] [str (sprintf "Error: %s" msgHead)]
                 ]
             Message.body [CustomClass "full-message"] 
                 [
-                    R.div [] [R.str msgBody]
+                    div [] [str msgBody]
                     Button.button [Button.CustomClass "is-danger is-large";Button.OnClick (fun x -> Reset |> dispatch)] 
-                        [R.str "Dismiss"]
+                        [str "Dismiss"]
                 ]            
         ]
 
@@ -390,22 +394,22 @@ let tickPerformedMessage (amount: int) (tickedTrade: string) (userName:string) (
         [
             Message.header [] 
                 [
-                    R.p [] [R.str "Tick successfull - Thank you"]
+                    p [] [str "Tick successfull - Thank you"]
                 ]
             Message.body [CustomClass "full-message"] 
                 [
-                    R.div [] 
+                    div [] 
                         [
-                            R.p [] [R.str (sprintf "%i %s ticked for" amount tickedTrade)]
-                            R.p [] [R.str userName]
+                            p [] [str (sprintf "%i %s ticked for" amount tickedTrade)]
+                            p [] [str userName]
                             Box.box' [Props [Class (sprintf "box-%s box" balanceClass)]] 
                                 [
-                                    R.p [] [R.str "current Balance:"]
-                                    R.p [] [R.str balance]
+                                    p [] [str "current Balance:"]
+                                    p [] [str balance]
                                 ]
                         ]
                     Button.button [Button.CustomClass (sprintf "%s is-large" balanceClass);Button.OnClick (fun x -> Reset |> dispatch)] 
-                        [R.str "OKAY"]
+                        [str "OKAY"]
                 ]            
         ]
 
@@ -441,9 +445,8 @@ open Elmish.HMR
 Program.mkProgram init update view
 #if DEBUG
 |> Program.withConsoleTrace
-|> Program.withHMR
 #endif
-|> Program.withReact "elmish-app"
+|> Program.withReactBatched "elmish-app"
 #if DEBUG
 |> Program.withDebugger
 #endif

@@ -12,10 +12,14 @@ open Fake.Core
 open Fake.DotNet
 open Fake.IO
 
+Target.initEnvironment ()
+
 let serverPath = Path.getFullName "./src/Server"
 let clientPath = Path.getFullName "./src/Client"
 let clientDeployPath = Path.combine clientPath "deploy"
 let deployDir = Path.getFullName "./deploy"
+
+let release = ReleaseNotes.load "RELEASE_NOTES.md"
 
 let platformTool tool winTool =
     let tool = if Environment.isUnix then tool else winTool
@@ -66,11 +70,15 @@ Target.create "InstallClient" (fun _ ->
     printfn "Yarn version:"
     runTool yarnTool "--version" __SOURCE_DIRECTORY__
     runTool yarnTool "install --frozen-lockfile" __SOURCE_DIRECTORY__
-    runDotNet "restore" clientPath
 )
 
 Target.create "Build" (fun _ ->
     runDotNet "build" serverPath
+    Shell.regexReplaceInFileWithEncoding
+        "let app = \".+\""
+       ("let app = \"" + release.NugetVersion + "\"")
+        System.Text.Encoding.UTF8
+        (Path.combine clientPath "Version.fs")
     runTool yarnTool "webpack-cli -p" __SOURCE_DIRECTORY__
 )
 
@@ -104,12 +112,33 @@ Target.create "Run" (fun _ ->
 
 
 
+Target.create "Bundle" (fun _ ->
+    let serverDir = Path.combine deployDir "Server"
+    let clientDir = Path.combine deployDir "Client"
+    let publicDir = Path.combine clientDir "public"
+    let publishArgs = sprintf "publish -c Release -o \"%s\"" serverDir
+    runDotNet publishArgs serverPath
+
+    // read and transform web.config, removing aspNetCore generated info
+    let config = Path.combine serverDir "web.config"
+    let mutable xmlDoc = new System.Xml.XmlDocument()
+    xmlDoc.LoadXml(File.readAsString config)
+    for node in xmlDoc.SelectNodes("/configuration/system.webServer/aspNetCore") do
+        ignore (node.ParentNode.RemoveChild(node))
+    for node in xmlDoc.SelectNodes("/configuration/system.webServer/handlers/add[@name='aspNetCore']") do
+        ignore (node.ParentNode.RemoveChild(node))
+    xmlDoc.Save(config)
+
+    Shell.copyDir publicDir clientDeployPath FileFilter.allFiles
+)
+
 
 open Fake.Core.TargetOperators
 
 "Clean"
     ==> "InstallClient"
     ==> "Build"
+    ==> "Bundle"
 
 
 "Clean"

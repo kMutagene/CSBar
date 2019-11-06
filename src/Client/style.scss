@@ -1,3 +1,20 @@
+@charset "utf-8";
+
+// FontAwesome
+$fa_font_path: "~@fortawesome/fontawesome-free/webfonts";
+@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
+@import '~@fortawesome/fontawesome-free/scss/regular.scss';
+@import '~@fortawesome/fontawesome-free/scss/solid.scss';
+@import '~@fortawesome/fontawesome-free/scss/brands.scss';
+
+// OpenSans
+$FontPathOpenSans: "~open-sans-fonts/open-sans";
+@import '~open-sans-fonts/open-sans';
+$family-primary: 'Open Sans';
+
+// Bulma
+@import "~bulma/bulma";
+
 .numPadBtn {
     height: 100%;
 }
@@ -8,7 +25,7 @@ body {
 }
 
 html {
-    overflow:hidden;
+    overflow: hidden;
 }
 
 .numPadContainer {
@@ -20,7 +37,7 @@ html {
     height: 100%
 }
 
-#elmish-app   {
+#elmish-app {
     height: 480px;
     width: 800px;
 }
@@ -37,8 +54,9 @@ html {
 
 .userImg {
     height: 190px;
-    width : 190px;
+    width: 190px;
 }
+
 .no-overflow {
     word-wrap: break-word;
     overflow: hidden;
@@ -49,29 +67,29 @@ html {
 }
 
 #BeerText {
-    background-color:rgb(33, 57, 71);
+    background-color: rgb(33, 57, 71);
     color: rgb(255, 230, 153);
     text-align: center;
     font-size: 30px;
     font-weight: bolder;
     height: 80px;
     line-height: 80px;
-    Border:1px solid white;
+    Border: 1px solid white;
 }
 
 #CoffeeText {
-    background-color:rgb(33, 57, 71);
+    background-color: rgb(33, 57, 71);
     color: rgb(219, 230, 244);
     text-align: center;
     font-size: 30px;
     font-weight: bolder;
     height: 80px;
     line-height: 80px;
-    Border:1px solid white;
+    Border: 1px solid white;
 }
 
 .full-message {
-    overflow:scroll;
+    overflow: scroll;
     text-align: center;
     font-size: 40px;
     height: 444px;
@@ -81,13 +99,14 @@ html {
 .beverageBtn {
     height: 100%;
     font-size: 50px;
-    line-height:50px;
+    line-height: 50px;
     border-radius: 0;
 }
 
 .is-lightBlue {
     background-color: rgb(219, 230, 244);
 }
+
 h3 {
     color: rgb(33, 57, 71) !important;
 }
@@ -96,7 +115,7 @@ h3 {
     height: 40px;
 }
 
-.topHeader { 
+.topHeader {
     margin-top: 24px;
 }
 
@@ -111,10 +130,10 @@ h3 {
     padding: 0px 5px 0px 5px;
     font-size: 30px;
     border-radius: 0;
-    border: 2px solid white ;
+    border: 2px solid white;
     text-align: center;
     color: rgb(33, 57, 71) !important;
-    background-color:rgb(219, 230, 244); 
+    background-color: rgb(219, 230, 244);
     overflow: hidden;
     word-break: break-all;
 }
@@ -125,6 +144,7 @@ h3 {
     border: 2px solid rgb(255, 43, 86);
     margin: 20px 60px 20px 60px;
 }
+
 .box-is-success {
     background-color: rgb(255, 255, 255);
     color: rgb(35, 209, 96);

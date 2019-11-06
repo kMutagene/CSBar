@@ -10,6 +10,7 @@ src/Client/public/js/
 release.cmd
 release.sh
 .idea/
+*.orig
 *.DotSettings.user
 deploy
-connectionString.txt
+.ionide/

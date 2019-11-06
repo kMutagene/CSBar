@@ -1,6 +1,9 @@
-﻿open System.IO
+open System.IO
+open System
+open System.Reflection
 open System.Net
-open System.Threading
+
+open Shared
 
 open Suave
 open Suave.Files
@@ -8,15 +11,26 @@ open Suave.Successful
 open Suave.Filters
 open Suave.Operators
 
-open Shared
-
 open Fable.Remoting.Server
 open Fable.Remoting.Suave
 
-open Suave.Logging
-
 open System.Data
 open System.Data.SqlClient
+
+module ServerPath =
+    let workingDirectory =
+        let currentAsm = Assembly.GetExecutingAssembly()
+        let codeBaseLoc = currentAsm.CodeBase
+        let localPath = Uri(codeBaseLoc).LocalPath
+        Directory.GetParent(localPath).FullName
+
+    let resolve segments =
+        let paths = Array.concat [| [| workingDirectory |]; Array.ofList segments |]
+        Path.GetFullPath(Path.Combine(paths))
+
+let tryGetEnv = System.Environment.GetEnvironmentVariable >> function null | "" -> None | x -> Some x
+let publicPath = ServerPath.resolve [".."; "Client"; "public"]
+let port = tryGetEnv "HTTP_PLATFORM_PORT" |> Option.map System.UInt16.Parse |> Option.defaultValue 8085us
 
 let establishConnection () = 
     let connectionString =
@@ -172,10 +186,6 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
         | _ -> userName, amount, tradeName'.Value
     |_ -> failwith "saas"
 
-
-
-let publicPath = Path.GetFullPath "../Client/public"
-let port = 8085us
 
 let config =
     { defaultConfig with

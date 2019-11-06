@@ -1,0 +1,1 @@
+Data Source=iomiqsdb1.bio.uni-kl.de\dbserver1;Initial Catalog=CSBarDB;User ID=CSBarUser;Password=CSBarUser;Connect Timeout=30
