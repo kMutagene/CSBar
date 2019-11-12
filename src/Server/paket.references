@@ -3,3 +3,4 @@ group Server
     Suave
     Fable.Remoting.Suave
     System.Data.SqlClient
+    MySql.Data

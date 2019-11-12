@@ -16,6 +16,7 @@ open Fable.Remoting.Suave
 
 open System.Data
 open System.Data.SqlClient
+open MySql.Data.MySqlClient
 
 module ServerPath =
     let workingDirectory =
@@ -34,20 +35,25 @@ let port = tryGetEnv "HTTP_PLATFORM_PORT" |> Option.map System.UInt16.Parse |> O
 
 let establishConnection () = 
     let connectionString =
+        let cStringPath =
+            ServerPath.resolve ["."; "connectionstring.txt"]
+
         seq {
-            use sr = new System.IO.StreamReader (__SOURCE_DIRECTORY__ + "/connectionString.txt")
+            use sr = new System.IO.StreamReader (cStringPath)
             while not sr.EndOfStream do
                 yield sr.ReadLine ()
         }
         |> String.concat ""
-    new SqlConnection(connectionString)
+    //printfn "establishing connection?"
+    new MySqlConnection(connectionString)
 
+        
 let checkPin (pin: string) =
     use connection = establishConnection()
     connection.Open()
     let command = connection.CreateCommand()
     command.CommandText <- "SELECT * FROM Person WHERE Pin = @pin"
-    let p = command.Parameters.Add ("@pin", SqlDbType.Int) 
+    let p = command.Parameters.Add ("@pin", MySqlDbType.Int32) 
     p.Value <- int pin
     let reader = command.ExecuteReader()
     let person = 
@@ -73,8 +79,8 @@ let getBalance (userName:string) =
     connection.Open()
     //get person Id for foreign key
     let getUserCmd = connection.CreateCommand()
-    getUserCmd.CommandText <- "SELECT Id FROM PERSON WHERE Name = @userName"
-    let n = getUserCmd.Parameters.Add ("@userName", SqlDbType.NVarChar) 
+    getUserCmd.CommandText <- "SELECT Id FROM Person WHERE Name = @userName"
+    let n = getUserCmd.Parameters.Add ("@userName", MySqlDbType.VarChar) 
     n.Value <- userName
     let reader = getUserCmd.ExecuteReader()
     let personId = 
@@ -93,7 +99,7 @@ let getBalance (userName:string) =
     |Some id ->
         let getBalanceCmd = connection.CreateCommand()
         getBalanceCmd.CommandText <- "SELECT Balance from CurrentBalance WHERE FK_Person = @pid"
-        let pid = getBalanceCmd.Parameters.Add ("@pid", SqlDbType.BigInt) 
+        let pid = getBalanceCmd.Parameters.Add ("@pid", MySqlDbType.Int32) 
         pid.Value <- id
         let reader = getBalanceCmd.ExecuteReader()
         match (reader.Read()) with
@@ -109,7 +115,6 @@ let getBalance (userName:string) =
                 None
     |_ -> None
 
-
 let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
 
     use connection = establishConnection()
@@ -119,7 +124,7 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
     printfn "searching for trade name with extended id %s" extId
     let getTradeNameCommand = connection.CreateCommand()
     getTradeNameCommand.CommandText <- "SELECT Name FROM Trade WHERE ExtId = @extId"
-    let n = getTradeNameCommand.Parameters.Add ("@extId", SqlDbType.NVarChar) 
+    let n = getTradeNameCommand.Parameters.Add ("@extId", MySqlDbType.VarChar) 
     n.Value <- extId
     let reader = getTradeNameCommand.ExecuteReader()
     let tradeName' = 
@@ -135,8 +140,8 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
 
     //get person Id for foreign key
     let getUserCmd = connection.CreateCommand()
-    getUserCmd.CommandText <- "SELECT Id FROM PERSON WHERE Name = @userName"
-    let n = getUserCmd.Parameters.Add ("@userName", SqlDbType.NVarChar) 
+    getUserCmd.CommandText <- "SELECT Id FROM Person WHERE Name = @userName"
+    let n = getUserCmd.Parameters.Add ("@userName", MySqlDbType.VarChar) 
     n.Value <- userName
     let reader = getUserCmd.ExecuteReader()
     let personId = 
@@ -153,7 +158,7 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
     //get trade id for foreign key
     let getTradeCmd = connection.CreateCommand()        
     getTradeCmd.CommandText <- "SELECT Id FROM Trade WHERE ExtId = @extId"
-    let tn = getTradeCmd.Parameters.Add ("@extId", SqlDbType.NVarChar) 
+    let tn = getTradeCmd.Parameters.Add ("@extId", MySqlDbType.VarChar) 
     tn.Value <- extId
     let reader = getTradeCmd.ExecuteReader()
     let tradeId = 
@@ -173,10 +178,10 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
         let insertTransactionCmd = connection.CreateCommand()
         insertTransactionCmd.CommandText <-"INSERT into Orders (FK_Person,FK_Trade,Amount,Time)
                                             VALUES (@pId,@tId,@amt,@time)"
-        let p = insertTransactionCmd.Parameters.Add("@pId",SqlDbType.BigInt)
-        let t = insertTransactionCmd.Parameters.Add("@tId",SqlDbType.BigInt)
-        let amt = insertTransactionCmd.Parameters.Add("@amt",SqlDbType.Int)
-        let time = insertTransactionCmd.Parameters.Add("@time",SqlDbType.DateTime2)
+        let p = insertTransactionCmd.Parameters.Add("@pId",MySqlDbType.Int32)
+        let t = insertTransactionCmd.Parameters.Add("@tId",MySqlDbType.Int64)
+        let amt = insertTransactionCmd.Parameters.Add("@amt",MySqlDbType.Int32)
+        let time = insertTransactionCmd.Parameters.Add("@time",MySqlDbType.DateTime)
         p.Value <- pId
         t.Value <- tId
         amt.Value <- amount
@@ -186,21 +191,10 @@ let tick (userName:string) (tradeName:string) (amount: int) (extId:string) =
         | _ -> userName, amount, tradeName'.Value
     |_ -> failwith "saas"
 
-
 let config =
     { defaultConfig with
         homeFolder = Some publicPath
         bindings = [ HttpBinding.create HTTP (System.Net.IPAddress.Parse "0.0.0.0") port ] }
-
-let getInitCounter() : Async<Counter> = async { return 42 }
-
-    
-let testUpperCaseJson = """{
-  "Pin": "1337",
-  "Name": "lol",
-  "Email": "ol",
-  "Status": "o"
-}"""
 
 let csbarApi : ICSBarApi = {
     ConfirmPin =
@@ -221,12 +215,22 @@ let csbarApi : ICSBarApi = {
 
 }
 
+// Custom error will be propagated back to client
+type CustomError = { errorMsg: string }
+
+let errorHandler (ex: Exception) (routeInfo: RouteInfo<HttpContext>) = 
+    // do some logging
+    printfn "Error at %s on method %s" routeInfo.path routeInfo.methodName
+    // decide whether or not you want to propagate the error to the client
+    Propagate ex.Message
+
 
 let webApi =
     Remoting.createApi()
     |> Remoting.withRouteBuilder Route.builder
     |> Remoting.withDiagnosticsLogger (printfn "%s")
     |> Remoting.fromValue csbarApi
+    |> Remoting.withErrorHandler errorHandler
     |> Remoting.buildWebPart
 
 let webApp =
